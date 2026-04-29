@@ -3,9 +3,16 @@ import { analyzeTranscript } from "@/lib/analyzeTranscript";
 
 export async function POST(request) {
   try {
-    const { transcript } = await request.json();
+    const formData = await request.formData();
+    const file = formData.get("file");
 
-    if (!transcript || typeof transcript !== "string" || transcript.trim().length === 0) {
+    if (!file) {
+      return NextResponse.json({ error: "file is required" }, { status: 400 });
+    }
+
+    const transcript = await file.text();
+
+    if (!transcript || transcript.trim().length === 0) {
       return NextResponse.json({ error: "transcript is required" }, { status: 400 });
     }
 

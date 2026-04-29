@@ -14,10 +14,16 @@ export default function HomePage() {
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append(
+        "file",
+        new Blob([transcriptText], { type: "text/plain" }),
+        "transcript.txt"
+      );
+
       const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript: transcriptText }),
+        body: formData,
       });
 
       if (!res.ok) {
