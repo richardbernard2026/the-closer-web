@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { analyzeTranscript } from "@/lib/analyzeTranscript";
 import mammoth from "mammoth";
-const pdfParse = (...args) => import('pdf-parse').then(m => m.default(...args));
 
 async function extractText(file) {
   const ext = file.name.split(".").pop().toLowerCase();
@@ -24,6 +23,7 @@ async function extractText(file) {
   }
 
   if (ext === "pdf") {
+    const pdfParse = require('pdf-parse');
     const data = await pdfParse(buffer);
     return data.text;
   }
