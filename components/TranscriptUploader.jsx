@@ -8,12 +8,15 @@ export default function TranscriptUploader({ onUpload }) {
   const [fileName, setFileName] = useState(null);
   const [error, setError] = useState(null);
 
+  const ALLOWED_EXTS = [".txt", ".vtt", ".srt", ".pdf", ".docx"];
+
   function handleFile(file) {
     setError(null);
     if (!file) return;
 
-    if (!file.name.endsWith(".txt")) {
-      setError("Only .txt files are supported.");
+    const ext = "." + file.name.split(".").pop().toLowerCase();
+    if (!ALLOWED_EXTS.includes(ext)) {
+      setError("Supported formats: TXT, VTT, SRT, PDF, DOCX");
       return;
     }
 
@@ -23,9 +26,7 @@ export default function TranscriptUploader({ onUpload }) {
     }
 
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (e) => onUpload(e.target.result);
-    reader.readAsText(file);
+    onUpload(file);
   }
 
   function handleDrop(e) {
@@ -49,7 +50,7 @@ export default function TranscriptUploader({ onUpload }) {
       <input
         ref={inputRef}
         type="file"
-        accept=".txt"
+        accept=".txt,.vtt,.srt,.pdf,.docx"
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
@@ -74,7 +75,7 @@ export default function TranscriptUploader({ onUpload }) {
         ) : (
           <>
             <p className="text-slate-300 font-medium">Drop your transcript here</p>
-            <p className="text-slate-500 text-sm">or click to browse &mdash; .txt files only</p>
+            <p className="text-slate-500 text-sm">or click to browse &mdash; TXT, VTT, SRT, PDF, DOCX</p>
           </>
         )}
 

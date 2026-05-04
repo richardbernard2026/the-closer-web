@@ -9,17 +9,13 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function handleUpload(transcriptText) {
+  async function handleUpload(file) {
     setError(null);
     setLoading(true);
 
     try {
       const formData = new FormData();
-      formData.append(
-        "file",
-        new Blob([transcriptText], { type: "text/plain" }),
-        "transcript.txt"
-      );
+      formData.append("file", file);
 
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -32,6 +28,8 @@ export default function HomePage() {
       }
 
       const data = await res.json();
+      const ext = file.name.split(".").pop().toLowerCase();
+      const transcriptText = ["txt", "vtt", "srt"].includes(ext) ? await file.text() : null;
       sessionStorage.setItem("closerInsights", JSON.stringify({ data, transcript: transcriptText }));
       router.push("/dashboard");
     } catch (err) {
