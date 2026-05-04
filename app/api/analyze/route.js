@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyzeTranscript } from "@/lib/analyzeTranscript";
 import mammoth from "mammoth";
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+const pdfParse = (...args) => import('pdf-parse').then(m => m.default(...args));
 
 async function extractText(file) {
   const ext = file.name.split(".").pop().toLowerCase();
