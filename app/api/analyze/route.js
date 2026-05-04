@@ -23,6 +23,7 @@ async function extractText(file) {
   }
 
   if (ext === "pdf") {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdfParse = require('pdf-parse');
     const data = await pdfParse(buffer);
     return data.text;
