@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyzeTranscript } from "@/lib/analyzeTranscript";
 import mammoth from "mammoth";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 
 async function extractText(file) {
   const ext = file.name.split(".").pop().toLowerCase();
@@ -24,14 +24,8 @@ async function extractText(file) {
   }
 
   if (ext === "pdf") {
-    const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
-    let text = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map((item) => item.str).join(" ") + "\n";
-    }
-    return text;
+    const data = await pdfParse(buffer);
+    return data.text;
   }
 
   if (ext === "docx") {
