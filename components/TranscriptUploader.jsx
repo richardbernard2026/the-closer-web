@@ -8,7 +8,8 @@ export default function TranscriptUploader({ onUpload }) {
   const [fileName, setFileName] = useState(null);
   const [error, setError] = useState(null);
 
-  const ALLOWED_EXTS = [".txt", ".vtt", ".srt", ".pdf", ".docx"];
+  const ALLOWED_EXTS = [".txt", ".vtt", ".srt", ".pdf", ".docx", ".mp3", ".mp4", ".wav", ".m4a", ".ogg", ".webm"];
+  const AUDIO_EXTS = [".mp3", ".mp4", ".wav", ".m4a", ".ogg", ".webm"];
 
   function handleFile(file) {
     setError(null);
@@ -16,12 +17,13 @@ export default function TranscriptUploader({ onUpload }) {
 
     const ext = "." + file.name.split(".").pop().toLowerCase();
     if (!ALLOWED_EXTS.includes(ext)) {
-      setError("Supported formats: TXT, VTT, SRT, PDF, DOCX");
+      setError("Supported formats: TXT, VTT, SRT, PDF, DOCX, MP3, MP4, WAV, M4A");
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("File too large (max 5 MB).");
+    const maxSize = AUDIO_EXTS.includes(ext) ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError(AUDIO_EXTS.includes(ext) ? "File too large (max 25 MB for audio)." : "File too large (max 5 MB).");
       return;
     }
 
@@ -50,7 +52,7 @@ export default function TranscriptUploader({ onUpload }) {
       <input
         ref={inputRef}
         type="file"
-        accept=".txt,.vtt,.srt,.pdf,.docx"
+        accept=".txt,.vtt,.srt,.pdf,.docx,.mp3,.mp4,.wav,.m4a,.ogg,.webm"
         className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
@@ -75,7 +77,7 @@ export default function TranscriptUploader({ onUpload }) {
         ) : (
           <>
             <p className="text-slate-300 font-medium">Drop your transcript here</p>
-            <p className="text-slate-500 text-sm">or click to browse &mdash; TXT, VTT, SRT, PDF, DOCX</p>
+            <p className="text-slate-500 text-sm">or click to browse &mdash; TXT, VTT, SRT, PDF, DOCX, MP3, MP4, WAV, M4A</p>
           </>
         )}
 

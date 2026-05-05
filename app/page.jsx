@@ -7,6 +7,7 @@ import TranscriptUploader from "@/components/TranscriptUploader";
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
   const [error, setError] = useState(null);
 
   async function handleUpload(file) {
@@ -14,28 +15,62 @@ export default function HomePage() {
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const audioExts = ["mp3", "mp4", "wav", "m4a", "ogg", "webm"];
+      const ext = file.name.split(".").pop().toLowerCase();
 
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        body: formData,
-      });
+      if (audioExts.includes(ext)) {
+        setStatus("Transcribing audio with Whisper...");
+        const transcribeForm = new FormData();
+        transcribeForm.append("file", file);
+        const transcribeRes = await fetch("/api/transcribe", {
+          method: "POST",
+          body: transcribeForm,
+        });
+        if (!transcribeRes.ok) {
+          const err = await transcribeRes.json();
+          throw new Error(err.error || "Transcription failed");
+        }
+        const { transcript } = await transcribeRes.json();
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `Server error ${res.status}`);
+        setStatus("Analyzing transcript...");
+        const analyzeForm = new FormData();
+        analyzeForm.append("file", new File([new Blob([transcript], { type: "text/plain" })], "transcript.txt"));
+        const analyzeRes = await fetch("/api/analyze", {
+          method: "POST",
+          body: analyzeForm,
+        });
+        if (!analyzeRes.ok) {
+          const err = await analyzeRes.json();
+          throw new Error(err.error || "Analysis failed");
+        }
+        const data = await analyzeRes.json();
+        sessionStorage.setItem("closerInsights", JSON.stringify({ data, transcript }));
+      } else {
+        setStatus("Analyzing with Groq…");
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error ?? `Server error ${res.status}`);
+        }
+
+        const data = await res.json();
+        const transcriptText = ["txt", "vtt", "srt"].includes(ext) ? await file.text() : null;
+        sessionStorage.setItem("closerInsights", JSON.stringify({ data, transcript: transcriptText }));
       }
 
-      const data = await res.json();
-      const ext = file.name.split(".").pop().toLowerCase();
-      const transcriptText = ["txt", "vtt", "srt"].includes(ext) ? await file.text() : null;
-      sessionStorage.setItem("closerInsights", JSON.stringify({ data, transcript: transcriptText }));
       router.push("/dashboard");
     } catch (err) {
       setError(err.message ?? "Something went wrong.");
     } finally {
       setLoading(false);
+      setStatus("");
     }
   }
 
@@ -60,7 +95,7 @@ export default function HomePage() {
           {loading ? (
             <div className="flex flex-col items-center gap-4 py-10">
               <div className="h-10 w-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-              <p className="text-slate-400 text-sm">Analyzing with Groq&hellip;</p>
+              <p className="text-slate-400 text-sm">{status || "Analyzing with Groq…"}</p>
             </div>
           ) : (
             <TranscriptUploader onUpload={handleUpload} />
